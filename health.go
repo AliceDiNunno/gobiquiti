@@ -3,7 +3,6 @@ package gobiquiti
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type Health struct {
@@ -31,10 +30,10 @@ type HealthResponse struct {
 	Data []Health `json:"data"`
 }
 
-func GetHealth(server Config, cookie *http.Cookie) (*HealthResponse, error) {
-	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/stat/health", server.Hostname, server.Site)
+func (c *CloudKeyInstance) GetHealth() (*HealthResponse, error) {
+	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/stat/health", c.Config.Hostname, c.Config.Site)
 
-	serverRequest, err := httpGET(url, cookie)
+	serverRequest, err := httpGET(url, c.cookie)
 
 	if err != nil {
 		return nil, err

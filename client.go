@@ -3,7 +3,6 @@ package gobiquiti
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 type Client struct {
@@ -59,10 +58,10 @@ func (c Client) GetDeviceName() string {
 	return ""
 }
 
-func GetClients(server Config, cookie *http.Cookie) (*ClientsResponse, error) {
-	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/rest/user", server.Hostname, server.Site)
+func (c *CloudKeyInstance) GetClients() (*ClientsResponse, error) {
+	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/rest/user", c.Config.Hostname, c.Config.Site)
 
-	serverRequest, err := httpGET(url, cookie)
+	serverRequest, err := httpGET(url, c.cookie)
 
 	if err != nil {
 		serverRequest = nil
@@ -83,10 +82,10 @@ func GetClients(server Config, cookie *http.Cookie) (*ClientsResponse, error) {
 	return &inter, nil
 }
 
-func GetClientsStats(server Config, cookie *http.Cookie) (*ClientsStatsResponse, error) {
-	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/stat/sta", server.Hostname, server.Site)
+func (c *CloudKeyInstance) GetClientsStats() (*ClientsStatsResponse, error) {
+	url := fmt.Sprintf("https://%s/proxy/network/api/s/%s/stat/sta", c.Config.Hostname, c.Config.Site)
 
-	serverRequest, err := httpGET(url, cookie)
+	serverRequest, err := httpGET(url, c.cookie)
 
 	if err != nil {
 		serverRequest = nil

@@ -11,47 +11,50 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-var cookie *http.Cookie = nil
-var cookieLastFetch time.Time
+type CloudKeyInstance struct {
+	cookie          *http.Cookie
+	cookieLastFetch time.Time
+	Config          Config
+}
 
-func cookieRefreshRequired() bool {
-	if cookie == nil {
+func (c *CloudKeyInstance) cookieRefreshRequired() bool {
+	if c.cookie == nil {
 		return true
 	}
 
-	return time.Since(cookieLastFetch).Minutes() > 50 //Ubiquiti's JWT elapses an hour after generation
+	return time.Since(c.cookieLastFetch).Minutes() > 50 //Ubiquiti's JWT elapses an hour after generation
 }
 
-func Login(server Config) (*http.Cookie, error) {
-	if !cookieRefreshRequired() {
-		return cookie, nil
+func (c *CloudKeyInstance) Login() error {
+	if !c.cookieRefreshRequired() {
+		return nil
 	}
 
-	cookie = nil
+	c.cookie = nil
 
 	loginEndpoint := "/api/auth/login"
 
-	url := "https://" + server.Hostname + loginEndpoint
+	url := "https://" + c.Config.Hostname + loginEndpoint
 
 	login := loginRequest{
-		Username: server.Username,
-		Password: server.Password,
+		Username: c.Config.Username,
+		Password: c.Config.Password,
 	}
 
 	request, err := httpPOST(url, login, nil)
 
 	if err != nil {
 		request = nil
-		return nil, err
+		return err
 	}
 
 	if len(request.Cookies()) > 0 {
-		cookieLastFetch = time.Now()
-		cookie := request.Cookies()[0]
+		c.cookieLastFetch = time.Now()
+		c.cookie = request.Cookies()[0]
 		request = nil
-		return cookie, nil
+		return nil
 	}
 	request = nil
 
-	return nil, errors.New("server did not respond with a valid token")
+	return errors.New("server did not respond with a valid token")
 }
